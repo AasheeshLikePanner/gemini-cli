@@ -49,10 +49,11 @@ describe('getDirectoryContextString', () => {
 
   it('should return context string for a single directory', async () => {
     const contextString = await getDirectoryContextString(mockConfig as Config);
-    expect(contextString).toContain('- **Workspace Directories:**');
-    expect(contextString).toContain('  - /test/dir');
     expect(contextString).toContain(
-      '- **Directory Structure:**\n\nMock Folder Structure',
+      "I'm currently working in the directory: /test/dir",
+    );
+    expect(contextString).toContain(
+      'Here is the folder structure of the current working directories:\n\nMock Folder Structure',
     );
   });
 
@@ -65,11 +66,11 @@ describe('getDirectoryContextString', () => {
       .mockResolvedValueOnce('Structure 2');
 
     const contextString = await getDirectoryContextString(mockConfig as Config);
-    expect(contextString).toContain('- **Workspace Directories:**');
-    expect(contextString).toContain('  - /test/dir1');
-    expect(contextString).toContain('  - /test/dir2');
     expect(contextString).toContain(
-      '- **Directory Structure:**\n\nStructure 1\nStructure 2',
+      "I'm currently working in the following directories:\n  - /test/dir1\n  - /test/dir2",
+    );
+    expect(contextString).toContain(
+      'Here is the folder structure of the current working directories:\n\nStructure 1\nStructure 2',
     );
   });
 });
@@ -79,6 +80,9 @@ describe('getEnvironmentContext', () => {
   let mockToolRegistry: { getTool: Mock };
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-08-05T12:00:00Z'));
+
     mockToolRegistry = {
       getTool: vi.fn(),
     };
@@ -100,6 +104,7 @@ describe('getEnvironmentContext', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.resetAllMocks();
   });
 
@@ -109,14 +114,16 @@ describe('getEnvironmentContext', () => {
     expect(parts.length).toBe(1);
     const context = parts[0].text;
 
-    expect(context).toContain('<session_context>');
-    expect(context).toContain('- **Workspace Directories:**');
-    expect(context).toContain('  - /test/dir');
+    expect(context).toContain("Today's date is");
+    expect(context).toContain("(formatted according to the user's locale)");
+    expect(context).toContain(`My operating system is: ${process.platform}`);
     expect(context).toContain(
-      '- **Directory Structure:**\n\nMock Folder Structure',
+      "I'm currently working in the directory: /test/dir",
+    );
+    expect(context).toContain(
+      'Here is the folder structure of the current working directories:\n\nMock Folder Structure',
     );
     expect(context).toContain('Mock Environment Memory');
-    expect(context).toContain('</session_context>');
     expect(getFolderStructure).toHaveBeenCalledWith('/test/dir', {
       fileService: undefined,
     });
@@ -135,14 +142,12 @@ describe('getEnvironmentContext', () => {
     expect(parts.length).toBe(1);
     const context = parts[0].text;
 
-    expect(context).toContain('<session_context>');
-    expect(context).toContain('- **Workspace Directories:**');
-    expect(context).toContain('  - /test/dir1');
-    expect(context).toContain('  - /test/dir2');
     expect(context).toContain(
-      '- **Directory Structure:**\n\nStructure 1\nStructure 2',
+      "I'm currently working in the following directories:\n  - /test/dir1\n  - /test/dir2",
     );
-    expect(context).toContain('</session_context>');
+    expect(context).toContain(
+      'Here is the folder structure of the current working directories:\n\nStructure 1\nStructure 2',
+    );
     expect(getFolderStructure).toHaveBeenCalledTimes(2);
   });
 
